@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: mr-phone-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: MR_PHONE_ADMIN_PASSWORD
+        sync: false
+      - key: MR_PHONE_ALLOWED_ORIGIN
+        sync: false
+      - key: MR_PHONE_DATA_DIR
+        value: /var/data
