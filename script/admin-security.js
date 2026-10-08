@@ -1,5 +1,5 @@
 /* Secure admin gate + drag/drop image helper. Set this to your deployed Java API URL. */
-const API_URL = window.MR_PHONE_API_URL || 'http://localhost:8080';
+const API_URL = 'https://mr-phone-api.onrender.com';
 const main = document.querySelector('.admin-main');
 main.insertAdjacentHTML('afterbegin', '<section id="loginGate" class="login-gate"><h2>Admin login</h2><p>Ingiza password ya admin kuendelea.</p><input id="adminPassword" type="password" autocomplete="current-password" placeholder="Admin password"><button id="loginButton" class="btn lime">Login ↗</button><p id="loginError" class="login-error"></p></section>');
 document.querySelectorAll('.admin-main > *:not(#loginGate)').forEach(el => el.hidden = true);
