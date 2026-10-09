@@ -1,11 +1,23 @@
-/* Pull the public catalogue and feedback maintained from the admin panel. */
-const MR_PHONE_API = 'https://mr-phone-api.onrender.com';
-(async () => {
+const REMOTE_API = 'https://mr-phone-api.onrender.com';
+const remoteImage = (value) => { const image = String(value || ''); return /^(https?:|data:image\/)/i.test(image) ? image : `../images/${encodeURIComponent(image)}`; };
+async function syncRemoteCatalog() {
   try {
-    const products = await fetch(MR_PHONE_API + '/api/products').then(r => r.ok ? r.json() : []);
-    const reviews = await fetch(MR_PHONE_API + '/api/feedback').then(r => r.ok ? r.json() : []);
-    if (Array.isArray(products) && products.length) localStorage.mrProducts = JSON.stringify(products);
-    if (Array.isArray(reviews) && reviews.length) localStorage.mrReviews = JSON.stringify(reviews);
-    if ((products?.length || reviews?.length) && !sessionStorage.mrRemoteRefresh) { sessionStorage.mrRemoteRefresh = '1'; location.reload(); }
-  } catch (_) {}
-})();
+    const response = await fetch(`${REMOTE_API}/api/products`);
+    if (!response.ok) return;
+    const remote = await response.json();
+    if (!Array.isArray(remote) || !remote.length) return;
+    localStorage.setItem('mrProducts', JSON.stringify(remote));
+    const current = JSON.stringify(window.__mrPhoneLastRemote || []);
+    if (current !== JSON.stringify(remote)) { window.__mrPhoneLastRemote = remote; location.reload(); return; }
+  } catch (_) { return; }
+}
+function repairRemoteImages() {
+  const products = JSON.parse(localStorage.getItem('mrProducts') || '[]');
+  document.querySelectorAll('#products article').forEach((card) => {
+    const name = card.querySelector('h3')?.textContent;
+    const product = products.find((item) => item.name === name);
+    const image = card.querySelector('img');
+    if (product && image) image.src = remoteImage(product.image);
+  });
+}
+syncRemoteCatalog().finally(() => setTimeout(repairRemoteImages, 50));

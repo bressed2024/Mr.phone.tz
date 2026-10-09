@@ -1,1 +1,29 @@
-/* Secure admin gate + drag/drop image helper. */ const API_URL='https://mr-phone-api.onrender.com'; const main=document.querySelector('.admin-main'); main.insertAdjacentHTML('afterbegin','<section id="loginGate" class="login-gate"><h2>Admin login</h2><p>Ingiza password ya admin kuendelea.</p><input id="adminPassword" type="password" autocomplete="current-password" placeholder="Admin password"><button id="loginButton" class="btn lime">Login ↗</button><p id="loginError" class="login-error"></p></section>'); document.querySelectorAll('.admin-main > *:not(#loginGate)').forEach(el=>el.hidden=true); document.querySelector('#loginButton').onclick=async()=>{const password=document.querySelector('#adminPassword').value,error=document.querySelector('#loginError');error.textContent='';try{const r=await fetch(API_URL+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});if(!r.ok)throw new Error('Password si sahihi');const data=await r.json();sessionStorage.setItem('mrPhoneAdminToken',data.token);unlock()}catch(e){error.textContent='Login imeshindikana. Hakikisha backend iko online.'}}; function unlock(){document.querySelector('#loginGate').remove();document.querySelectorAll('.admin-main > *').forEach(el=>el.hidden=false);setupDropzone();window.loadRemoteAdmin?.()} if(sessionStorage.getItem('mrPhoneAdminToken'))unlock(); function setupDropzone(){const input=document.querySelector('input[name=image]');if(!input)return;input.type='text';input.readOnly=true;const box=document.createElement('div');box.className='dropzone';box.textContent='📷 Drag & drop image hapa au click kuchagua';input.parentNode.insertBefore(box,input);const picker=document.createElement('input');picker.type='file';picker.accept='image/jpeg,image/png,image/webp';picker.hidden=true;box.after(picker);const read=file=>{if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){alert('Tumia JPG, PNG au WEBP chini ya 5MB.');return}const reader=new FileReader();reader.onload=()=>{input.value=reader.result;box.textContent='✓ '+file.name};reader.readAsDataURL(file)};box.onclick=()=>picker.click();box.ondragover=e=>{e.preventDefault();box.classList.add('dragover')};box.ondragleave=()=>box.classList.remove('dragover');box.ondrop=e=>{e.preventDefault();box.classList.remove('dragover');read(e.dataTransfer.files[0])};picker.onchange=()=>read(picker.files[0])}
+const API_URL = 'https://mr-phone-api.onrender.com';
+(() => {
+  const main = document.querySelector('.admin-main');
+  if (!main) return;
+  const gate = document.createElement('section');
+  gate.id = 'loginGate'; gate.className = 'login-gate';
+  gate.innerHTML = '<h2>Admin login</h2><p>Ingiza password ya admin kuendelea.</p><input id="adminPassword" type="password" autocomplete="current-password" placeholder="Admin password"><button id="loginButton" class="btn lime">Login ↗</button><p id="loginError" class="login-error" role="alert"></p>';
+  main.prepend(gate);
+  const protectedNodes = [...main.children].filter((node) => node !== gate);
+  const setVisible = (visible) => protectedNodes.forEach((node) => { node.hidden = !visible; });
+  setVisible(false);
+  async function login() {
+    const password = document.querySelector('#adminPassword').value;
+    const error = document.querySelector('#loginError'); error.textContent = '';
+    if (!password) { error.textContent = 'Andika password kwanza.'; return; }
+    const button = document.querySelector('#loginButton'); button.disabled = true; button.textContent = 'Inaingia...';
+    try {
+      const response = await fetch(`${API_URL}/api/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+      if (!response.ok) throw new Error('login');
+      const data = await response.json(); if (!data.token) throw new Error('token');
+      sessionStorage.setItem('mrPhoneAdminToken', data.token); unlock();
+    } catch (_) { error.textContent = 'Login imeshindikana. Hakikisha password na backend ni sahihi.'; }
+    finally { button.disabled = false; button.textContent = 'Login ↗'; }
+  }
+  function unlock() { gate.remove(); setVisible(true); window.dispatchEvent(new CustomEvent('mr-phone-admin-ready')); }
+  document.querySelector('#loginButton').addEventListener('click', login);
+  document.querySelector('#adminPassword').addEventListener('keydown', (event) => { if (event.key === 'Enter') login(); });
+  if (sessionStorage.getItem('mrPhoneAdminToken')) unlock();
+})();
