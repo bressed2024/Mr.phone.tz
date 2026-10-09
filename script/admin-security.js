@@ -1,4 +1,4 @@
-const API_URL = 'https://mr-phone-api.onrender.com';
+const ADMIN_API_URL = 'https://mr-phone-api.onrender.com';
 (() => {
   const main = document.querySelector('.admin-main');
   if (!main) return;
@@ -15,7 +15,7 @@ const API_URL = 'https://mr-phone-api.onrender.com';
     if (!password) { error.textContent = 'Andika password kwanza.'; return; }
     const button = document.querySelector('#loginButton'); button.disabled = true; button.textContent = 'Inaingia...';
     try {
-      const response = await fetch(`${API_URL}/api/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+      const response = await fetch(`${ADMIN_API_URL}/api/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
       if (!response.ok) throw new Error('login');
       const data = await response.json(); if (!data.token) throw new Error('token');
       sessionStorage.setItem('mrPhoneAdminToken', data.token); unlock();
